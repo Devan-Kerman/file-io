@@ -1,6 +1,7 @@
 package net.devtech.filepipeline.impl;
 
 import java.nio.file.Path;
+import java.util.concurrent.Callable;
 
 import net.devtech.filepipeline.api.VirtualDirectory;
 import net.devtech.filepipeline.api.source.VirtualRoot;
@@ -55,6 +56,8 @@ public class DirectoryVirtualRoot implements VirtualRoot, InternalVirtualSource 
 		}
 
 		@Override
-		protected void close0() {}
+		protected Callable<?> close0() {
+			return () -> null;
+		}
 	}
 }

@@ -95,7 +95,7 @@ public class MultiDirectory implements VirtualDirectory {
 	}
 
 	@Override
-	public VirtualRoot openAsSource() throws IOException {
+	public VirtualRoot openAsSource() {
 		return this.source;
 	}
 

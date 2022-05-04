@@ -1,9 +1,6 @@
 package net.devtech.filepipeline.api.source;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.Spliterator;
-import java.util.Spliterators;
 import java.util.stream.Stream;
 
 import net.devtech.filepipeline.api.VirtualDirectory;
@@ -50,7 +47,7 @@ public interface VirtualRoot extends VirtualDirectory {
 
 	@Override
 	@Contract("->this")
-	default VirtualRoot openAsSource() throws IOException {
+	default VirtualRoot openAsSource() {
 		return this;
 	}
 

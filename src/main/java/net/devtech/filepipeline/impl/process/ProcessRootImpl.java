@@ -1,6 +1,8 @@
 package net.devtech.filepipeline.impl.process;
 
 import java.io.IOException;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
 import net.devtech.filepipeline.api.VirtualDirectory;
@@ -15,7 +17,7 @@ import net.devtech.filepipeline.impl.util.ReadOnlySourceException;
 public class ProcessRootImpl implements ProcessRoot, InternalVirtualSource {
 	private final Closable closable = new Closable();
 	final VirtualRoot root;
-	boolean invalid;
+	AtomicBoolean invalid;
 
 	public ProcessRootImpl(Function<ClosableVirtualRoot, VirtualRoot> root) {
 		this.root = root.apply(this.closable);
@@ -42,13 +44,14 @@ public class ProcessRootImpl implements ProcessRoot, InternalVirtualSource {
 
 	@Override
 	public boolean isInvalid() {
-		return this.invalid;
+		return this.invalid.get();
 	}
 
 	public class Closable extends ClosableVirtualRoot {
 		@Override
-		protected void close0() throws Exception {
-			ProcessRootImpl.this.invalid = true;
+		protected Callable<?> close0() {
+			var invalid = ProcessRootImpl.this.invalid;
+			return () -> invalid.getAndSet(true);
 		}
 
 		@Override public VirtualDirectory rootDir() {throw new UnsupportedOperationException();}

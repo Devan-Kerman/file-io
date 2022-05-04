@@ -8,7 +8,7 @@ import net.devtech.filepipeline.api.VirtualFile;
 import net.devtech.filepipeline.api.VirtualPath;
 
 public interface VirtualSink {
-	VirtualSink subsink(VirtualPath path) throws IOException;
+	VirtualSink subsink(VirtualPath path);
 
 	/**
 	 * @return a view of the output filesystem

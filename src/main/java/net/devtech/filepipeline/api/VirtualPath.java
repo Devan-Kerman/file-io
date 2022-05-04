@@ -1,7 +1,5 @@
 package net.devtech.filepipeline.api;
 
-import java.io.IOException;
-
 import net.devtech.filepipeline.api.source.VirtualRoot;
 import net.devtech.filepipeline.impl.util.FPInternal;
 import org.jetbrains.annotations.Nullable;
@@ -22,13 +20,13 @@ public interface VirtualPath {
 	 * @return opens the file as a new source
 	 *  for example, if the file is a directory, this returns a new VirtualSource starting from that directory
 	 */
-	VirtualRoot openAsSource() throws IOException;
+	VirtualRoot openAsSource() throws Exception;
 
 	@Nullable
 	default VirtualRoot openAsSourceSilent() {
 		try {
 			return this.openAsSource();
-		} catch(IOException e) {
+		} catch(Exception e) {
 			return null;
 		}
 	}
@@ -36,7 +34,7 @@ public interface VirtualPath {
 	default VirtualRoot openOrThrow() {
 		try {
 			return this.openAsSource();
-		} catch(IOException e) {
+		} catch(Exception e) {
 			throw FPInternal.rethrow(e);
 		}
 	}

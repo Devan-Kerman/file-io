@@ -22,8 +22,12 @@ public class NioVirtualDirectorySink implements VirtualSink {
 	}
 
 	@Override
-	public VirtualSink subsink(VirtualPath directory) throws IOException {
-		return ((InternalVirtualSource)((InternalVirtualPath)directory).asSource(true)).createSink();
+	public VirtualSink subsink(VirtualPath directory) {
+		try {
+			return ((InternalVirtualSource)((InternalVirtualPath)directory).asSource(true)).createSink();
+		} catch(Exception e) {
+			throw FPInternal.rethrow(e);
+		}
 	}
 
 	@Override

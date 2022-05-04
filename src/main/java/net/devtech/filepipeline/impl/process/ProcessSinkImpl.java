@@ -1,6 +1,5 @@
 package net.devtech.filepipeline.impl.process;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import net.devtech.filepipeline.api.VirtualDirectory;
@@ -26,7 +25,7 @@ public class ProcessSinkImpl implements ProcessSink {
 	}
 
 	@Override
-	public VirtualSink subsink(VirtualPath path) throws IOException {
+	public VirtualSink subsink(VirtualPath path) {
 		return this.sink.subsink(path);
 	}
 
