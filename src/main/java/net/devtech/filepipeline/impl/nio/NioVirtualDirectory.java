@@ -5,20 +5,18 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import net.devtech.filepipeline.api.VirtualDirectory;
 import net.devtech.filepipeline.api.VirtualFile;
 import net.devtech.filepipeline.api.VirtualPath;
-import net.devtech.filepipeline.api.source.VirtualRoot;
-import net.devtech.filepipeline.impl.ClosableVirtualRoot;
-import net.devtech.filepipeline.impl.DirectoryVirtualRoot;
+import net.devtech.filepipeline.api.source.VirtualSource;
+import net.devtech.filepipeline.impl.ClosableVirtualSource;
+import net.devtech.filepipeline.impl.DirectoryVirtualSource;
 import net.devtech.filepipeline.impl.util.FPInternal;
 import net.devtech.filepipeline.impl.util.PathStringIterator;
 import org.jetbrains.annotations.Nullable;
@@ -32,21 +30,26 @@ public class NioVirtualDirectory extends NioVirtualPath implements VirtualDirect
 	 */
 	int completedSize = -1;
 
-	public NioVirtualDirectory(VirtualRoot source, VirtualDirectory parent, Path path) {
+	public NioVirtualDirectory(VirtualSource source, VirtualDirectory parent, Path path) {
 		super(source, parent, path);
 	}
 
 	@Override
 	public VirtualPath find(String relativePath) {
+		this.validateState();
 		VirtualPath current = this;
 		for(String path : PathStringIterator.iterable(relativePath)) {
 			current = find(current, path);
+			if(current == null) {
+				return null;
+			}
 		}
 		return current;
 	}
 
 	@Override
 	public Iterable<VirtualPath> walk() {
+		this.validateState();
 		if(this.completedSize == this.children.size()) {
 			//noinspection unchecked
 			return (Iterable) this.children.values();
@@ -82,6 +85,7 @@ public class NioVirtualDirectory extends NioVirtualPath implements VirtualDirect
 
 	@Override
 	public Stream<VirtualPath> stream() {
+		this.validateState();
 		DirectoryStream<Path> paths;
 		try {
 			paths = Files.newDirectoryStream(this.getPath());
@@ -112,16 +116,18 @@ public class NioVirtualDirectory extends NioVirtualPath implements VirtualDirect
 		NioVirtualDirectory dir = this;
 		while(iterator.hasNext()) {
 			String path = iterator.next();
-			dir = (NioVirtualDirectory) this.resolveChild(path, null, true, true);
+			dir = (NioVirtualDirectory) dir.resolveChild(path, null, true, true);
 		}
 		return dir;
 	}
 
-	private static VirtualPath find(VirtualPath current, String name) {
-		if(current instanceof NioVirtualDirectory d) {
-			return d.resolveChild(name, null, false, false);
-		} else {
-			throw new IllegalStateException(current.relativePath() + " is a file, not directory, so \"" + name + "\" is invalid!");
+	@Override
+	public void delete() {
+		this.depthStream().map(NioVirtualPath.class::cast).forEach(NioVirtualPath::delete);
+		try {
+			Files.deleteIfExists(this.getPath());
+		} catch(IOException e) {
+			throw FPInternal.rethrow(e);
 		}
 	}
 
@@ -138,6 +144,19 @@ public class NioVirtualDirectory extends NioVirtualPath implements VirtualDirect
 			}
 		} else {
 			throw new IllegalArgumentException(path + " is not a directory!");
+		}
+	}
+
+	@Override
+	public String toString() {
+		return "NioVirtualDirectory{" + this.relativePath + "}";
+	}
+
+	private static VirtualPath find(VirtualPath current, String name) {
+		if(current instanceof NioVirtualDirectory d) {
+			return d.resolveChild(name, null, false, false);
+		} else {
+			throw new IllegalStateException(current.relativePath() + " is a file, not directory, so \"" + name + "\" is invalid!");
 		}
 	}
 
@@ -189,7 +208,12 @@ public class NioVirtualDirectory extends NioVirtualPath implements VirtualDirect
 	}
 
 	@Override
-	protected VirtualRoot createSource(ClosableVirtualRoot source, boolean create) {
-		return new DirectoryVirtualRoot(this.getPath(), source);
+	protected VirtualSource createSource(ClosableVirtualSource source, boolean create) {
+		return new DirectoryVirtualSource(this.getPath(), source);
+	}
+
+	@Override
+	protected String invalidState() {
+		return "source " + this.source + " of directory " + this.relativePath + " was invalidated!";
 	}
 }

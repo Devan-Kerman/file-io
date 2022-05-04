@@ -6,7 +6,7 @@ import java.lang.ref.SoftReference;
 import java.util.concurrent.Callable;
 
 import net.devtech.filepipeline.api.VirtualPath;
-import net.devtech.filepipeline.api.source.VirtualRoot;
+import net.devtech.filepipeline.api.source.VirtualSource;
 import net.devtech.filepipeline.impl.util.FPInternal;
 
 public abstract class InternalVirtualPath implements VirtualPath {
@@ -15,17 +15,25 @@ public abstract class InternalVirtualPath implements VirtualPath {
 	/**
 	 * Delays cache deletion until garbage collector thinks it needs more memory
 	 */
-	protected SoftReference<VirtualRoot> archive;
+	protected SoftReference<VirtualSource> archive;
 
-	protected abstract VirtualRoot createSource(ClosableVirtualRoot source, boolean create) throws IOException;
+	protected abstract VirtualSource createSource(ClosableVirtualSource source, boolean create) throws IOException;
 
-	public VirtualRoot openAsSource(ClosableVirtualRoot source, boolean create) throws Exception {
-		VirtualRoot archive = this.archive.get();
+	protected abstract String invalidState();
+
+	protected void validateState() {
+		if(this.getRoot().isInvalid()) {
+			throw new IllegalStateException(this.invalidState());
+		}
+	}
+
+	public VirtualSource openAsSource(ClosableVirtualSource source, boolean create) throws Exception {
+		VirtualSource archive = this.archive != null ? this.archive.get() : null;
 		if(archive == null || archive.isInvalid()) {
-			VirtualRoot src = this.createSource(source, create);
-			SoftReference<VirtualRoot> archiveRef = new SoftReference<>(src);
+			VirtualSource src = this.createSource(source, create);
+			SoftReference<VirtualSource> archiveRef = new SoftReference<>(src);
 			this.archive = archiveRef;
-			if(src instanceof ClosableVirtualRoot i) { // once it is actually garbage collected, the archive is properly disposed of
+			if(src instanceof ClosableVirtualSource i) { // once it is actually garbage collected, the archive is properly disposed of
 				i.ref = archiveRef;
 				Callable<?> callable = i.cleanupFunction();
 				i.clean = ARCHIVE_CACHE.register(src, () -> {
@@ -41,8 +49,8 @@ public abstract class InternalVirtualPath implements VirtualPath {
 		return archive;
 	}
 
-	public VirtualRoot asSource(boolean create) throws Exception {
-		VirtualRoot root = this.getRoot();
+	public VirtualSource asSource(boolean create) throws Exception {
+		VirtualSource root = this.getRoot();
 		if(root instanceof InternalVirtualSource i) {
 			return this.openAsSource(i.getClosable(), create);
 		} else {
@@ -51,7 +59,8 @@ public abstract class InternalVirtualPath implements VirtualPath {
 	}
 
 	@Override
-	public VirtualRoot openAsSource() throws Exception {
+	public VirtualSource openAsSource() throws Exception {
+		this.validateState();
 		return this.asSource(false);
 	}
 }

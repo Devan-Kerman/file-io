@@ -6,17 +6,17 @@ import java.nio.file.Path;
 
 import net.devtech.filepipeline.api.VirtualDirectory;
 import net.devtech.filepipeline.api.VirtualPath;
-import net.devtech.filepipeline.api.source.VirtualRoot;
+import net.devtech.filepipeline.api.source.VirtualSource;
 import net.devtech.filepipeline.impl.InternalVirtualPath;
 import org.jetbrains.annotations.Nullable;
 
 public abstract class NioVirtualPath extends InternalVirtualPath {
-	final VirtualRoot source;
+	final VirtualSource source;
 	final VirtualDirectory parent;
 	private final Path path;
 	String relativePath;
 
-	public NioVirtualPath(VirtualRoot source, VirtualDirectory parent, Path path) {
+	public NioVirtualPath(VirtualSource source, VirtualDirectory parent, Path path) {
 		this.source = source;
 		this.parent = parent;
 		this.path = path; // todo relativize
@@ -32,7 +32,7 @@ public abstract class NioVirtualPath extends InternalVirtualPath {
 	}
 
 	@Override
-	public VirtualRoot getRoot() {
+	public VirtualSource getRoot() {
 		return this.source;
 	}
 
@@ -52,6 +52,8 @@ public abstract class NioVirtualPath extends InternalVirtualPath {
 	public Path getPath() {
 		return path;
 	}
+
+	public abstract void delete();
 
 	protected abstract void copyTo0(VirtualPath path) throws IOException;
 }

@@ -5,16 +5,22 @@ import java.nio.ByteBuffer;
 import net.devtech.filepipeline.api.VirtualDirectory;
 import net.devtech.filepipeline.api.VirtualFile;
 import net.devtech.filepipeline.api.VirtualPath;
-import net.devtech.filepipeline.api.source.VirtualRoot;
+import net.devtech.filepipeline.api.source.VirtualSource;
 import net.devtech.filepipeline.api.source.VirtualSink;
 
 public class ProcessSinkImpl implements VirtualSink {
-	final VirtualRoot root;
+	final VirtualSource root;
 	final VirtualSink sink;
 
-	public ProcessSinkImpl(VirtualRoot root, VirtualSink sink) {
+	public ProcessSinkImpl(VirtualSource root, VirtualSink sink) {
 		this.root = root;
 		this.sink = sink;
+	}
+
+	protected void validateState() {
+		if(this.root.isInvalid()) {
+			throw new IllegalStateException("VirtualSource " + this.root + " for this VirtualSink was invalidated, cannot reuse this object!");
+		}
 	}
 
 	@Override
@@ -24,31 +30,42 @@ public class ProcessSinkImpl implements VirtualSink {
 
 	@Override
 	public VirtualSink subsink(VirtualPath path) {
+		this.validateState();
 		return this.sink.subsink(path);
 	}
 
 	@Override
-	public VirtualRoot getSource() {
+	public VirtualSource getSource() {
 		return this.root;
 	}
 
 	@Override
 	public VirtualFile outputFile(VirtualDirectory directory, String relative) {
+		this.validateState();
 		return this.sink.outputFile(directory, relative);
 	}
 
 	@Override
 	public VirtualDirectory outputDir(String path) {
+		this.validateState();
 		return this.sink.outputDir(path);
 	}
 
 	@Override
+	public void delete(VirtualPath path) {
+		this.validateState();
+		this.sink.delete(path);
+	}
+
+	@Override
 	public void copy(VirtualPath from, VirtualPath to) {
+		this.validateState();
 		this.sink.copy(from, to);
 	}
 
 	@Override
 	public void write(VirtualFile path, ByteBuffer buffer) {
+		this.validateState();
 		this.sink.write(path, buffer);
 	}
 }

@@ -18,6 +18,8 @@ public class PathStringIterator implements Iterator<String> {
 		if(to == 0) {
 			this.from = 1;
 			this.to = path.indexOf('/', 1);
+		} else {
+			this.to = to;
 		}
 	}
 

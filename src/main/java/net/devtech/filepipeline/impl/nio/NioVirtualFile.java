@@ -7,13 +7,14 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Map;
 
 import net.devtech.filepipeline.api.VirtualDirectory;
 import net.devtech.filepipeline.api.VirtualFile;
 import net.devtech.filepipeline.api.VirtualPath;
-import net.devtech.filepipeline.api.source.VirtualRoot;
-import net.devtech.filepipeline.impl.ClosableVirtualRoot;
+import net.devtech.filepipeline.api.source.VirtualSource;
+import net.devtech.filepipeline.impl.ClosableVirtualSource;
 import net.devtech.filepipeline.impl.WritableVirtualFile;
 import net.devtech.filepipeline.impl.util.FPInternal;
 
@@ -22,24 +23,29 @@ public class NioVirtualFile extends NioVirtualPath implements VirtualFile {
 	private static final ByteBuffer EMPTY = ByteBuffer.allocate(0);
 	ByteBuffer content;
 
-	public NioVirtualFile(VirtualRoot source, VirtualDirectory parent, Path path) {
+	public NioVirtualFile(VirtualSource source, VirtualDirectory parent, Path path) {
 		super(source, parent, path);
+	}
+
+	public NioVirtualFile(VirtualSource source, VirtualDirectory parent, Path path, ByteBuffer content) {
+		super(source, parent, path);
+		this.content = content;
 	}
 
 	@Override
 	public void copyTo(VirtualPath to) throws IOException {
 		if(to instanceof NioVirtualFile f) {
 			f.content = this.content;
-			Files.copy(this.getPath(), f.getPath());
+			Files.copy(this.getPath(), f.getPath(), StandardCopyOption.REPLACE_EXISTING);
 		} else {
 			this.copyTo0(to);
 		}
 	}
 
-	public void write(ByteBuffer buffer) {
-		this.content = buffer;
-		try(OutputStream stream = Files.newOutputStream(this.getPath())) {
-			stream.write(buffer.array(), buffer.arrayOffset(), buffer.limit());
+	@Override
+	public void delete() {
+		try {
+			Files.deleteIfExists(this.getPath());
 		} catch(IOException e) {
 			throw FPInternal.rethrow(e);
 		}
@@ -54,9 +60,13 @@ public class NioVirtualFile extends NioVirtualPath implements VirtualFile {
 		}
 	}
 
-	public NioVirtualFile(VirtualRoot source, VirtualDirectory parent, Path path, ByteBuffer content) {
-		super(source, parent, path);
-		this.content = content;
+	public void write(ByteBuffer buffer) {
+		this.content = buffer;
+		try(OutputStream stream = Files.newOutputStream(this.getPath())) {
+			stream.write(buffer.array(), buffer.arrayOffset(), buffer.limit());
+		} catch(IOException e) {
+			throw FPInternal.rethrow(e);
+		}
 	}
 
 	public void setEmptyContents() {
@@ -65,6 +75,7 @@ public class NioVirtualFile extends NioVirtualPath implements VirtualFile {
 
 	@Override
 	public ByteBuffer getContents() {
+		this.validateState();
 		ByteBuffer content = this.content;
 		if(content != null) {
 			return content;
@@ -74,15 +85,20 @@ public class NioVirtualFile extends NioVirtualPath implements VirtualFile {
 	}
 
 	@Override
-	protected VirtualRoot createSource(ClosableVirtualRoot source, boolean create) throws IOException {
+	protected VirtualSource createSource(ClosableVirtualSource source, boolean create) throws IOException {
 		FileSystem system;
 		if(create) {
 			system = FileSystems.newFileSystem(this.getPath(), NIO_CREATE);
 		} else {
 			system = FileSystems.newFileSystem(this.getPath());
 		}
-		FileSystemVirtualRoot virtual = new FileSystemVirtualRoot(system, true);
+		FileSystemVirtualSource virtual = new FileSystemVirtualSource(system, true);
 		source.insert(virtual);
 		return virtual;
+	}
+
+	@Override
+	protected String invalidState() {
+		return "source " + this.source + " of file " + this.relativePath + " was invalidated!";
 	}
 }

@@ -6,7 +6,7 @@ import org.jetbrains.annotations.ApiStatus;
 
 public interface InternalVirtualSource {
 	@ApiStatus.Internal
-	ClosableVirtualRoot getClosable();
+	ClosableVirtualSource getClosable();
 
 	// todo get sink to avoid duplication
 

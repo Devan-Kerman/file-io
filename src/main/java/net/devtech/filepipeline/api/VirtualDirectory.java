@@ -67,10 +67,13 @@ public interface VirtualDirectory extends VirtualPath {
 
 	Stream<VirtualPath> stream();
 
+	/**
+	 * @return stream that visits the files of a directory before
+	 */
 	default Stream<VirtualPath> depthStream() {
 		return this.stream().flatMap(v -> {
 			if(v instanceof VirtualDirectory p) {
-				return p.depthStream();
+				return Stream.concat(p.depthStream(), Stream.of(v));
 			} else {
 				return Stream.of(v);
 			}

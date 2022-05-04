@@ -12,7 +12,7 @@ import net.devtech.filepipeline.impl.util.ReadOnlySourceException;
 public interface VirtualSink extends AutoCloseable {
 	static VirtualSink primaryDrive() {
 		try {
-			return ((InternalVirtualSource)VirtualRoot.primaryDrive()).createSink();
+			return ((InternalVirtualSource) VirtualSource.primaryDrive()).createSink();
 		} catch(ReadOnlySourceException e) {
 			throw FPInternal.rethrow(e);
 		}
@@ -20,7 +20,7 @@ public interface VirtualSink extends AutoCloseable {
 
 	static VirtualSink workingDirectory() {
 		try {
-			return ((InternalVirtualSource)VirtualRoot.workingDirectory()).createSink();
+			return ((InternalVirtualSource) VirtualSource.workingDirectory()).createSink();
 		} catch(ReadOnlySourceException e) {
 			throw FPInternal.rethrow(e);
 		}
@@ -28,7 +28,7 @@ public interface VirtualSink extends AutoCloseable {
 
 	static VirtualSink ofFilePath(String path) {
 		try {
-			return ((InternalVirtualSource)VirtualRoot.ofFilePath(path)).createSink();
+			return ((InternalVirtualSource) VirtualSource.ofFilePath(path)).createSink();
 		} catch(ReadOnlySourceException e) {
 			throw FPInternal.rethrow(e);
 		}
@@ -39,7 +39,7 @@ public interface VirtualSink extends AutoCloseable {
 	/**
 	 * @return a view of the output filesystem
 	 */
-	VirtualRoot getSource();
+	VirtualSource getSource();
 
 	default VirtualFile outputFile(String path) {
 		int i = path.lastIndexOf('/');
@@ -59,6 +59,8 @@ public interface VirtualSink extends AutoCloseable {
 	 * @return a newly-created empty directory at a given location if a directory does not already exist.
 	 */
 	VirtualDirectory outputDir(String path);
+
+	void delete(VirtualPath path);
 
 	void copy(VirtualPath from, VirtualPath to);
 

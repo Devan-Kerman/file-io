@@ -1,25 +1,23 @@
 package net.devtech.filepipeline.impl.multi;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 import net.devtech.filepipeline.api.VirtualDirectory;
 import net.devtech.filepipeline.api.VirtualFile;
 import net.devtech.filepipeline.api.VirtualPath;
-import net.devtech.filepipeline.api.source.VirtualRoot;
+import net.devtech.filepipeline.api.source.VirtualSource;
 import org.jetbrains.annotations.Nullable;
 
 public class MultiDirectory implements VirtualDirectory {
 	final VirtualDirectory parent;
-	final VirtualRoot source;
+	final VirtualSource source;
 	final Iterable<? extends VirtualDirectory> directories;
 	final Iterable<VirtualPath> walker;
 	final String path;
 
-	public MultiDirectory(VirtualDirectory parent, VirtualRoot source, Iterable<? extends VirtualDirectory> directories) {
+	public MultiDirectory(VirtualDirectory parent, VirtualSource source, Iterable<? extends VirtualDirectory> directories) {
 		this.parent = parent;
 		this.source = source;
 		if(!directories.iterator().hasNext()) {
@@ -30,7 +28,14 @@ public class MultiDirectory implements VirtualDirectory {
 		this.path = directories.iterator().next().relativePath();
 	}
 
+	public void validateState() {
+		if(this.source.isInvalid()) {
+			throw new IllegalStateException("source " + this.source + " of directory " + this.path + " was invalidated!");
+		}
+	}
+
 	public VirtualPath find(String relativePath, boolean directory, boolean file) {
+		this.validateState();
 		List<VirtualDirectory> dirs = null;
 		for(VirtualDirectory dir : this.directories) {
 			VirtualPath path = dir.find(relativePath);
@@ -67,11 +72,13 @@ public class MultiDirectory implements VirtualDirectory {
 
 	@Override
 	public Iterable<VirtualPath> walk() {
+		this.validateState();
 		return this.walker;
 	}
 
 	@Override
 	public Stream<VirtualPath> stream() {
+		this.validateState();
 		var builder = Stream.<Stream<VirtualPath>>builder();
 		for(VirtualDirectory directory : this.directories) {
 			builder.add(directory.stream());
@@ -80,7 +87,7 @@ public class MultiDirectory implements VirtualDirectory {
 	}
 
 	@Override
-	public VirtualRoot getRoot() {
+	public VirtualSource getRoot() {
 		return this.source;
 	}
 
@@ -95,7 +102,8 @@ public class MultiDirectory implements VirtualDirectory {
 	}
 
 	@Override
-	public VirtualRoot openAsSource() {
+	public VirtualSource openAsSource() {
+		this.validateState();
 		return this.source;
 	}
 
@@ -107,5 +115,10 @@ public class MultiDirectory implements VirtualDirectory {
 	@Override
 	public int hashCode() {
 		return this.directories.hashCode();
+	}
+
+	@Override
+	public String toString() {
+		return this.relativePath();
 	}
 }

@@ -6,20 +6,26 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
 import net.devtech.filepipeline.api.VirtualDirectory;
-import net.devtech.filepipeline.api.source.VirtualRoot;
+import net.devtech.filepipeline.api.source.VirtualSource;
 import net.devtech.filepipeline.api.source.VirtualSink;
-import net.devtech.filepipeline.impl.ClosableVirtualRoot;
+import net.devtech.filepipeline.impl.ClosableVirtualSource;
 import net.devtech.filepipeline.impl.InternalVirtualSource;
 import net.devtech.filepipeline.impl.util.FPInternal;
 import net.devtech.filepipeline.impl.util.ReadOnlySourceException;
 
-public class ProcessRootImpl implements VirtualRoot, InternalVirtualSource {
-	final VirtualRoot root;
+public class ProcessSourceImpl implements VirtualSource, InternalVirtualSource {
+	final VirtualSource root;
 	final AtomicBoolean invalid = new AtomicBoolean();
 	final Closable closable = new Closable(this.invalid);
 
-	public ProcessRootImpl(Function<ClosableVirtualRoot, VirtualRoot> root) {
+	public ProcessSourceImpl(Function<ClosableVirtualSource, VirtualSource> root) {
 		this.root = root.apply(this.closable);
+	}
+
+	protected void validateState() {
+		if(this.root.isInvalid()) {
+			throw new IllegalStateException("This source is invalidated!");
+		}
 	}
 
 	@Override
@@ -38,6 +44,7 @@ public class ProcessRootImpl implements VirtualRoot, InternalVirtualSource {
 
 	@Override
 	public VirtualDirectory rootDir() {
+		this.validateState();
 		return this.root.rootDir();
 	}
 
@@ -46,7 +53,7 @@ public class ProcessRootImpl implements VirtualRoot, InternalVirtualSource {
 		return this.invalid.get();
 	}
 
-	public static final class Closable extends ClosableVirtualRoot {
+	public static final class Closable extends ClosableVirtualSource {
 		final AtomicBoolean invalid;
 
 		public Closable(AtomicBoolean invalid) {this.invalid = invalid;}
@@ -62,7 +69,7 @@ public class ProcessRootImpl implements VirtualRoot, InternalVirtualSource {
 	}
 
 	@Override
-	public ClosableVirtualRoot getClosable() {
+	public ClosableVirtualSource getClosable() {
 		return this.closable;
 	}
 }

@@ -5,16 +5,17 @@ import java.lang.ref.SoftReference;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import net.devtech.filepipeline.api.source.VirtualRoot;
+import net.devtech.filepipeline.api.source.VirtualSource;
 import net.devtech.filepipeline.impl.util.FPInternal;
 
-public abstract class ClosableVirtualRoot implements InternalVirtualSource, AutoCloseable, VirtualRoot {
-	static final class ChildRef {ClosableVirtualRoot child;}
+public abstract class ClosableVirtualSource implements InternalVirtualSource, AutoCloseable, VirtualSource {
+	static final class ChildRef {
+		ClosableVirtualSource child;}
 
 	final AtomicBoolean isInvalid = new AtomicBoolean();
-	ClosableVirtualRoot next;
+	ClosableVirtualSource next;
 	ChildRef holder = new ChildRef();
-	SoftReference<VirtualRoot> ref;
+	SoftReference<VirtualSource> ref;
 	Cleaner.Cleanable clean;
 
 	protected abstract Callable<?> close0();
@@ -24,12 +25,12 @@ public abstract class ClosableVirtualRoot implements InternalVirtualSource, Auto
 			return;
 		}
 
-		ClosableVirtualRoot child = this.holder.child;
+		ClosableVirtualSource child = this.holder.child;
 		if(child != null) {
 			child.inv();
 		}
 
-		ClosableVirtualRoot next = this.next;
+		ClosableVirtualSource next = this.next;
 		if(next != null) {
 			next.inv();
 		}
@@ -87,13 +88,13 @@ public abstract class ClosableVirtualRoot implements InternalVirtualSource, Auto
 		return this.isInvalid.get();
 	}
 
-	public void insert(ClosableVirtualRoot source) {
+	public void insert(ClosableVirtualSource source) {
 		source.next = this.holder.child;
 		this.holder.child = source;
 	}
 
 	@Override
-	public ClosableVirtualRoot getClosable() {
+	public ClosableVirtualSource getClosable() {
 		return this;
 	}
 }

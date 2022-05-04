@@ -6,27 +6,28 @@ import java.util.stream.Stream;
 
 import net.devtech.filepipeline.api.VirtualDirectory;
 import net.devtech.filepipeline.api.VirtualPath;
-import net.devtech.filepipeline.impl.DirectoryVirtualRoot;
-import net.devtech.filepipeline.impl.process.ProcessRootImpl;
+import net.devtech.filepipeline.impl.DirectoryVirtualSource;
+import net.devtech.filepipeline.impl.process.ProcessSourceImpl;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
-public interface VirtualRoot extends VirtualDirectory, AutoCloseable {
-	static VirtualRoot primaryDrive() {
+public interface VirtualSource extends VirtualDirectory, AutoCloseable {
+	static VirtualSource primaryDrive() {
 		return ofFilePath("/");
 	}
 
-	static VirtualRoot workingDirectory() {
+	static VirtualSource workingDirectory() {
 		return ofFilePath("");
 	}
 
-	static VirtualRoot ofFilePath(String path) {
-		return new ProcessRootImpl(c -> new DirectoryVirtualRoot(Path.of(path), c));
+	static VirtualSource ofFilePath(String path) {
+		return new ProcessSourceImpl(c -> new DirectoryVirtualSource(Path.of(path), c));
 	}
 
 	VirtualDirectory rootDir();
 
 	@Override
+	@Contract("->null")
 	default @Nullable VirtualDirectory getParent() {
 		return null;
 	}
@@ -51,7 +52,7 @@ public interface VirtualRoot extends VirtualDirectory, AutoCloseable {
 	 */
 	@Override
 	@Contract("->this")
-	default VirtualRoot getRoot() {
+	default VirtualSource getRoot() {
 		return this;
 	}
 
@@ -62,7 +63,7 @@ public interface VirtualRoot extends VirtualDirectory, AutoCloseable {
 
 	@Override
 	@Contract("->this")
-	default VirtualRoot openAsSource() {
+	default VirtualSource openAsSource() {
 		return this;
 	}
 

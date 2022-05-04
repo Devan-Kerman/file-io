@@ -3,17 +3,17 @@ package net.devtech.filepipeline.impl;
 import java.nio.file.Path;
 
 import net.devtech.filepipeline.api.VirtualDirectory;
-import net.devtech.filepipeline.api.source.VirtualRoot;
+import net.devtech.filepipeline.api.source.VirtualSource;
 import net.devtech.filepipeline.api.source.VirtualSink;
 import net.devtech.filepipeline.impl.nio.NioVirtualDirectory;
 import net.devtech.filepipeline.impl.nio.NioVirtualDirectorySink;
 import net.devtech.filepipeline.impl.util.ReadOnlySourceException;
 
-public class DirectoryVirtualRoot implements VirtualRoot, InternalVirtualSource {
+public class DirectoryVirtualSource implements VirtualSource, InternalVirtualSource {
 	protected final NioVirtualDirectory directory;
-	final ClosableVirtualRoot closable;
+	final ClosableVirtualSource closable;
 
-	public DirectoryVirtualRoot(Path path, ClosableVirtualRoot closable) {
+	public DirectoryVirtualSource(Path path, ClosableVirtualSource closable) {
 		this.directory = new NioVirtualDirectory(this, null, path);
 		this.closable = closable;
 	}
@@ -29,7 +29,7 @@ public class DirectoryVirtualRoot implements VirtualRoot, InternalVirtualSource 
 	}
 
 	@Override
-	public ClosableVirtualRoot getClosable() {
+	public ClosableVirtualSource getClosable() {
 		return this.closable;
 	}
 

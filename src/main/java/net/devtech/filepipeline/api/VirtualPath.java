@@ -1,14 +1,14 @@
 package net.devtech.filepipeline.api;
 
-import net.devtech.filepipeline.api.source.VirtualRoot;
+import net.devtech.filepipeline.api.source.VirtualSource;
 import net.devtech.filepipeline.impl.util.FPInternal;
 import org.jetbrains.annotations.Nullable;
 
 public interface VirtualPath {
-	VirtualRoot getRoot();
+	VirtualSource getRoot();
 
 	/**
-	 * if file is in root directory, returns {@link VirtualRoot}.
+	 * if file is in root directory, returns {@link VirtualSource}.
 	 *  If the file <b>is</b> the root directory, returns null
 	 */
 	@Nullable
@@ -20,10 +20,10 @@ public interface VirtualPath {
 	 * @return opens the file as a new source
 	 *  for example, if the file is a directory, this returns a new VirtualSource starting from that directory
 	 */
-	VirtualRoot openAsSource() throws Exception;
+	VirtualSource openAsSource() throws Exception;
 
 	@Nullable
-	default VirtualRoot openAsSourceSilent() {
+	default VirtualSource openAsSourceSilent() {
 		try {
 			return this.openAsSource();
 		} catch(Exception e) {
@@ -31,7 +31,7 @@ public interface VirtualPath {
 		}
 	}
 
-	default VirtualRoot openOrThrow() {
+	default VirtualSource openOrThrow() {
 		try {
 			return this.openAsSource();
 		} catch(Exception e) {
