@@ -1,14 +1,29 @@
 package net.devtech.filepipeline.api.source;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.stream.Stream;
 
 import net.devtech.filepipeline.api.VirtualDirectory;
 import net.devtech.filepipeline.api.VirtualPath;
+import net.devtech.filepipeline.impl.DirectoryVirtualRoot;
+import net.devtech.filepipeline.impl.process.ProcessRootImpl;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
-public interface VirtualRoot extends VirtualDirectory {
+public interface VirtualRoot extends VirtualDirectory, AutoCloseable {
+	static VirtualRoot primaryDrive() {
+		return ofFilePath("/");
+	}
+
+	static VirtualRoot workingDirectory() {
+		return ofFilePath("");
+	}
+
+	static VirtualRoot ofFilePath(String path) {
+		return new ProcessRootImpl(c -> new DirectoryVirtualRoot(Path.of(path), c));
+	}
+
 	VirtualDirectory rootDir();
 
 	@Override
@@ -51,5 +66,11 @@ public interface VirtualRoot extends VirtualDirectory {
 		return this;
 	}
 
-	boolean isInvalid();
+	boolean isInvalid(); // todo make operations using invalid roots throw error
+
+	/**
+	 * Invalidates the current virtual root
+	 */
+	@Override
+	void close() throws Exception;
 }

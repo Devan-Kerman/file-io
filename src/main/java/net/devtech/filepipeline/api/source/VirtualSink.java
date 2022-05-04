@@ -1,13 +1,39 @@
 package net.devtech.filepipeline.api.source;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 
 import net.devtech.filepipeline.api.VirtualDirectory;
 import net.devtech.filepipeline.api.VirtualFile;
 import net.devtech.filepipeline.api.VirtualPath;
+import net.devtech.filepipeline.impl.InternalVirtualSource;
+import net.devtech.filepipeline.impl.util.FPInternal;
+import net.devtech.filepipeline.impl.util.ReadOnlySourceException;
 
-public interface VirtualSink {
+public interface VirtualSink extends AutoCloseable {
+	static VirtualSink primaryDrive() {
+		try {
+			return ((InternalVirtualSource)VirtualRoot.primaryDrive()).createSink();
+		} catch(ReadOnlySourceException e) {
+			throw FPInternal.rethrow(e);
+		}
+	}
+
+	static VirtualSink workingDirectory() {
+		try {
+			return ((InternalVirtualSource)VirtualRoot.workingDirectory()).createSink();
+		} catch(ReadOnlySourceException e) {
+			throw FPInternal.rethrow(e);
+		}
+	}
+
+	static VirtualSink ofFilePath(String path) {
+		try {
+			return ((InternalVirtualSource)VirtualRoot.ofFilePath(path)).createSink();
+		} catch(ReadOnlySourceException e) {
+			throw FPInternal.rethrow(e);
+		}
+	}
+
 	VirtualSink subsink(VirtualPath path);
 
 	/**
@@ -41,4 +67,10 @@ public interface VirtualSink {
 	default void write(VirtualFile path, byte[] data, int off, int len) {
 		this.write(path, ByteBuffer.wrap(data, off, len));
 	}
+
+	/**
+	 * closes the {@link #getSource()}
+	 */
+	@Override
+	void close() throws Exception;
 }

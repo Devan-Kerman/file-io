@@ -5,12 +5,10 @@ import java.nio.ByteBuffer;
 import net.devtech.filepipeline.api.VirtualDirectory;
 import net.devtech.filepipeline.api.VirtualFile;
 import net.devtech.filepipeline.api.VirtualPath;
-import net.devtech.filepipeline.api.source.ProcessRoot;
-import net.devtech.filepipeline.api.source.ProcessSink;
 import net.devtech.filepipeline.api.source.VirtualRoot;
 import net.devtech.filepipeline.api.source.VirtualSink;
 
-public class ProcessSinkImpl implements ProcessSink {
+public class ProcessSinkImpl implements VirtualSink {
 	final VirtualRoot root;
 	final VirtualSink sink;
 
@@ -21,7 +19,7 @@ public class ProcessSinkImpl implements ProcessSink {
 
 	@Override
 	public void close() throws Exception {
-		((ProcessRoot)this.getSource()).close();
+		this.root.close();
 	}
 
 	@Override

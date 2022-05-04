@@ -22,9 +22,9 @@ public class NioVirtualDirectorySink implements VirtualSink {
 	}
 
 	@Override
-	public VirtualSink subsink(VirtualPath directory) {
+	public VirtualSink subsink(VirtualPath path) {
 		try {
-			return ((InternalVirtualSource)((InternalVirtualPath)directory).asSource(true)).createSink();
+			return ((InternalVirtualSource)((InternalVirtualPath)path).asSource(true)).createSink();
 		} catch(Exception e) {
 			throw FPInternal.rethrow(e);
 		}
@@ -66,5 +66,10 @@ public class NioVirtualDirectorySink implements VirtualSink {
 			throw new IllegalArgumentException(directory + " does not belong to " + this.source);
 		}
 		((NioVirtualFile) path).write(buffer);
+	}
+
+	@Override
+	public void close() throws Exception {
+		this.source.close();
 	}
 }

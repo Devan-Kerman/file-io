@@ -1,48 +1,62 @@
 package net.devtech.filepipeline.impl;
 
+import java.lang.ref.Cleaner;
+import java.lang.ref.SoftReference;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import net.devtech.filepipeline.api.source.VirtualRoot;
 import net.devtech.filepipeline.impl.util.FPInternal;
 
 public abstract class ClosableVirtualRoot implements InternalVirtualSource, AutoCloseable, VirtualRoot {
 	static final class ChildRef {ClosableVirtualRoot child;}
-	public ClosableVirtualRoot next;
-	public ChildRef holder = new ChildRef();
 
-	boolean isInvalid;
+	final AtomicBoolean isInvalid = new AtomicBoolean();
+	ClosableVirtualRoot next;
+	ChildRef holder = new ChildRef();
+	SoftReference<VirtualRoot> ref;
+	Cleaner.Cleanable clean;
 
 	protected abstract Callable<?> close0();
 
 	protected void inv() throws Exception {
-		ClosableVirtualRoot current = this;
-		if(this.isInvalid) {
+		if(this.isInvalid.getAndSet(true)) {
 			return;
 		}
 
-		ClosableVirtualRoot child = current.holder.child;
+		ClosableVirtualRoot child = this.holder.child;
 		if(child != null) {
 			child.inv();
 		}
 
-		ClosableVirtualRoot next = current.next;
+		ClosableVirtualRoot next = this.next;
 		if(next != null) {
 			next.inv();
 		}
 
-		this.isInvalid = true;
 		this.close0().call();
 	}
 
 	@Override
 	public void close() {
+		if(this.isInvalid.getAndSet(true)) {
+			return;
+		}
 		// has to be done in reverse order
 		try {
 			if(this.holder.child != null) {
 				this.holder.child.inv();
 			}
 
-			this.isInvalid = true;
+			if(this.ref != null) {
+				this.ref.clear();
+				this.ref = null;
+			}
+			if(this.clean != null) { // remove from cleaner
+				this.clean.clean();
+				this.clean = null;
+			}
+
 			this.close0().call();
 		} catch(Exception e) {
 			throw FPInternal.rethrow(e);
@@ -52,7 +66,12 @@ public abstract class ClosableVirtualRoot implements InternalVirtualSource, Auto
 	public Callable<?> cleanupFunction() {
 		ChildRef holder = this.holder;
 		Callable<?> closer = this.close0();
+		AtomicBoolean invalid = this.isInvalid;
 		return () -> {
+			if(invalid.getAndSet(true)) { // already closed
+				return null;
+			}
+
 			if(holder.child != null) {
 				holder.child.inv();
 			}
@@ -65,7 +84,7 @@ public abstract class ClosableVirtualRoot implements InternalVirtualSource, Auto
 
 	@Override
 	public boolean isInvalid() {
-		return this.isInvalid;
+		return this.isInvalid.get();
 	}
 
 	public void insert(ClosableVirtualRoot source) {

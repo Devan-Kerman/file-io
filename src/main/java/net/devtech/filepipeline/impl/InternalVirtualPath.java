@@ -23,10 +23,12 @@ public abstract class InternalVirtualPath implements VirtualPath {
 		VirtualRoot archive = this.archive.get();
 		if(archive == null || archive.isInvalid()) {
 			VirtualRoot src = this.createSource(source, create);
-			this.archive = new SoftReference<>(src);
+			SoftReference<VirtualRoot> archiveRef = new SoftReference<>(src);
+			this.archive = archiveRef;
 			if(src instanceof ClosableVirtualRoot i) { // once it is actually garbage collected, the archive is properly disposed of
+				i.ref = archiveRef;
 				Callable<?> callable = i.cleanupFunction();
-				ARCHIVE_CACHE.register(src, () -> {
+				i.clean = ARCHIVE_CACHE.register(src, () -> {
 					try {
 						callable.call();
 					} catch(Exception e) {

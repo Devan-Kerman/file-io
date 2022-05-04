@@ -6,7 +6,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
 import net.devtech.filepipeline.api.VirtualDirectory;
-import net.devtech.filepipeline.api.source.ProcessRoot;
 import net.devtech.filepipeline.api.source.VirtualRoot;
 import net.devtech.filepipeline.api.source.VirtualSink;
 import net.devtech.filepipeline.impl.ClosableVirtualRoot;
@@ -14,22 +13,22 @@ import net.devtech.filepipeline.impl.InternalVirtualSource;
 import net.devtech.filepipeline.impl.util.FPInternal;
 import net.devtech.filepipeline.impl.util.ReadOnlySourceException;
 
-public class ProcessRootImpl implements ProcessRoot, InternalVirtualSource {
-	private final Closable closable = new Closable();
+public class ProcessRootImpl implements VirtualRoot, InternalVirtualSource {
 	final VirtualRoot root;
-	AtomicBoolean invalid;
+	final AtomicBoolean invalid = new AtomicBoolean();
+	final Closable closable = new Closable(this.invalid);
 
 	public ProcessRootImpl(Function<ClosableVirtualRoot, VirtualRoot> root) {
 		this.root = root.apply(this.closable);
 	}
 
 	@Override
-	public void close() throws Exception {
+	public void close() {
 		this.closable.close();
 	}
 
 	@Override
-	public VirtualSink createSink() throws ReadOnlySourceException {
+	public VirtualSink createSink() {
 		try {
 			return new ProcessSinkImpl(this, ((InternalVirtualSource)this.root).createSink());
 		} catch(IOException e) {
@@ -47,10 +46,14 @@ public class ProcessRootImpl implements ProcessRoot, InternalVirtualSource {
 		return this.invalid.get();
 	}
 
-	public class Closable extends ClosableVirtualRoot {
+	public static final class Closable extends ClosableVirtualRoot {
+		final AtomicBoolean invalid;
+
+		public Closable(AtomicBoolean invalid) {this.invalid = invalid;}
+
 		@Override
 		protected Callable<?> close0() {
-			var invalid = ProcessRootImpl.this.invalid;
+			var invalid = this.invalid;
 			return () -> invalid.getAndSet(true);
 		}
 
