@@ -42,6 +42,8 @@ public class NioVirtualDirectorySink implements VirtualSink {
 		return this.source;
 	}
 
+
+
 	@Override
 	public VirtualFile outputFile(VirtualDirectory directory, String relative) {
 		this.validateState();
@@ -53,8 +55,16 @@ public class NioVirtualDirectorySink implements VirtualSink {
 
 	@Override
 	public VirtualDirectory outputDir(String path) {
+		return this.outputDir(this.directory, path);
+	}
+
+	@Override
+	public VirtualDirectory outputDir(VirtualDirectory directory, String path) {
 		this.validateState();
-		return this.directory.outputDir(path);
+		if(directory.getRoot() != this.source) {
+			throw new IllegalArgumentException(directory + " does not belong to " + this.source);
+		}
+		return ((NioVirtualDirectory)directory).outputDir(path);
 	}
 
 	@Override
@@ -77,6 +87,15 @@ public class NioVirtualDirectorySink implements VirtualSink {
 			throw new IllegalArgumentException(directory + " does not belong to " + this.source);
 		}
 		((NioVirtualPath) path).delete();
+	}
+
+	@Override
+	public void deleteContents(VirtualDirectory path) {
+		this.validateState();
+		if(path.getRoot() != this.source) {
+			throw new IllegalArgumentException(directory + " does not belong to " + this.source);
+		}
+		((NioVirtualDirectory) path).deleteContents();
 	}
 
 	@Override

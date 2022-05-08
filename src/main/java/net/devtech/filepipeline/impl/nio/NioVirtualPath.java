@@ -23,6 +23,11 @@ public abstract class NioVirtualPath extends InternalVirtualPath {
 	}
 
 	@Override
+	public boolean exists() {
+		return Files.exists(this.path);
+	}
+
+	@Override
 	public String relativePath() {
 		String path = this.relativePath;
 		if(path == null) {

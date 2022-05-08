@@ -1,6 +1,13 @@
 package net.devtech.filepipeline.api.source;
 
+import java.io.BufferedWriter;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 
 import net.devtech.filepipeline.api.VirtualDirectory;
 import net.devtech.filepipeline.api.VirtualFile;
@@ -58,13 +65,55 @@ public interface VirtualSink extends AutoCloseable {
 	/**
 	 * @return a newly-created empty directory at a given location if a directory does not already exist.
 	 */
-	VirtualDirectory outputDir(String path);
+	default VirtualDirectory outputDir(String path) {
+		return this.outputDir(this.getSource().getRoot(), path);
+	}
+
+	VirtualDirectory outputDir(VirtualDirectory directory, String path);
 
 	void delete(VirtualPath path);
+
+	void deleteContents(VirtualDirectory path);
 
 	void copy(VirtualPath from, VirtualPath to);
 
 	void write(VirtualFile path, ByteBuffer buffer);
+
+	default void createIfAbsent(VirtualPath path) {
+		if(!path.exists()) {
+			this.create(path);
+		}
+	}
+
+	default void create(VirtualPath path) {
+		if(!path.exists()) {
+			if(path instanceof VirtualFile) {
+				this.outputFile(path.getParent(), path.fileName());
+			} else {
+				this.outputDir(path.getParent(), path.fileName());
+			}
+		} else {
+			throw new IllegalArgumentException(path + " already exists!");
+		}
+	}
+
+	default OutputStream newOutputStream(VirtualFile file) {
+		return new ByteArrayOutputStream() {
+			@Override
+			public void close() throws IOException {
+				VirtualSink.this.write(file, ByteBuffer.wrap(this.buf, 0, this.count));
+				super.close();
+			}
+		};
+	}
+
+	default Writer newWriter(VirtualFile file) {
+		return new OutputStreamWriter(this.newOutputStream(file));
+	}
+
+	default void writeString(VirtualFile file, String contents, Charset charset) {
+		this.write(file, charset.encode(contents));
+	}
 
 	default void write(VirtualFile path, byte[] data, int off, int len) {
 		this.write(path, ByteBuffer.wrap(data, off, len));

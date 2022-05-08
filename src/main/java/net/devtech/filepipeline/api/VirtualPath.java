@@ -16,11 +16,18 @@ public interface VirtualPath {
 
 	String relativePath();
 
+	default String fileName() {
+		String path = this.relativePath();
+		return path.substring(path.lastIndexOf('/')+1);
+	}
+
 	/**
 	 * @return opens the file as a new source
 	 *  for example, if the file is a directory, this returns a new VirtualSource starting from that directory
 	 */
 	VirtualSource openAsSource() throws Exception;
+
+	boolean exists();
 
 	@Nullable
 	default VirtualSource openAsSourceSilent() {
@@ -37,5 +44,13 @@ public interface VirtualPath {
 		} catch(Exception e) {
 			throw FPInternal.rethrow(e);
 		}
+	}
+
+	default VirtualFile asFile() {
+		return (VirtualFile) this;
+	}
+
+	default VirtualDirectory asDir() {
+		return (VirtualDirectory) this;
 	}
 }

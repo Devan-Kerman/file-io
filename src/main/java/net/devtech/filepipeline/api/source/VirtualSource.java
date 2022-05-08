@@ -5,10 +5,12 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import net.devtech.filepipeline.api.VirtualDirectory;
+import net.devtech.filepipeline.api.VirtualFile;
 import net.devtech.filepipeline.api.VirtualPath;
 import net.devtech.filepipeline.impl.DirectoryVirtualSource;
 import net.devtech.filepipeline.impl.process.ProcessSourceImpl;
 import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public interface VirtualSource extends VirtualDirectory, AutoCloseable {
@@ -45,6 +47,16 @@ public interface VirtualSource extends VirtualDirectory, AutoCloseable {
 	@Override
 	default @Nullable VirtualPath find(String relativePath) {
 		return this.rootDir().find(relativePath);
+	}
+
+	@Override
+	default @NotNull VirtualFile getFile(String relativePath) {
+		return this.rootDir().getFile(relativePath);
+	}
+
+	@Override
+	default @NotNull VirtualDirectory getDir(String relativePath) {
+		return this.rootDir().getDir(relativePath);
 	}
 
 	/**

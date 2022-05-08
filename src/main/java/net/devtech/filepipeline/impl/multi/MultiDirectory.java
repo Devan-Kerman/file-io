@@ -108,6 +108,17 @@ public class MultiDirectory implements VirtualDirectory {
 	}
 
 	@Override
+	public boolean exists() {
+		this.validateState();
+		for(VirtualDirectory directory : this.directories) {
+			if(directory.exists()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	@Override
 	public boolean equals(Object o) {
 		return this == o || o instanceof MultiDirectory dir && this.directories.equals(dir.directories);
 	}

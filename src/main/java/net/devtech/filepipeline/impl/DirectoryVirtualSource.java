@@ -19,6 +19,11 @@ public class DirectoryVirtualSource implements VirtualSource, InternalVirtualSou
 	}
 
 	@Override
+	public boolean exists() {
+		return this.directory.exists();
+	}
+
+	@Override
 	public boolean isInvalid() {
 		return this.closable != null && this.closable.isInvalid.get();
 	}

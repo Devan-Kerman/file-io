@@ -19,7 +19,6 @@ public class FPTests {
 			VirtualFile file = testJarContents.resolveFile("net/devtech/filepipeline/api/source/VirtualSource.class"); // find class file in jar
 			VirtualFile to = output.outputFile(outputDirectory, "VirtualSource.class"); // "create" file to
 			output.copy(file, to); // copy file out
-			output.delete(outputDirectory); // delete output directory
 		} catch(Exception e) {
 			throw FPInternal.rethrow(e);
 		}

@@ -16,6 +16,15 @@ public interface VirtualDirectory extends VirtualPath {
 	@Nullable
 	VirtualPath find(String relativePath);
 
+	/**
+	 * @return the path at the location or an inexistant path if it's not there
+	 */
+	@NotNull
+	VirtualFile getFile(String relativePath);
+
+	@NotNull
+	VirtualDirectory getDir(String relativePath);
+
 	@Nullable
 	default VirtualFile findFile(String relativePath) {
 		VirtualPath resolve = this.find(relativePath);

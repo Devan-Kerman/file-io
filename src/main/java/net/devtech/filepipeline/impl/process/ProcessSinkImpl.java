@@ -52,9 +52,21 @@ public class ProcessSinkImpl implements VirtualSink {
 	}
 
 	@Override
+	public VirtualDirectory outputDir(VirtualDirectory directory, String path) {
+		this.validateState();
+		return this.sink.outputDir(directory, path);
+	}
+
+	@Override
 	public void delete(VirtualPath path) {
 		this.validateState();
 		this.sink.delete(path);
+	}
+
+	@Override
+	public void deleteContents(VirtualDirectory path) {
+		this.validateState();
+		this.sink.deleteContents(path);
 	}
 
 	@Override

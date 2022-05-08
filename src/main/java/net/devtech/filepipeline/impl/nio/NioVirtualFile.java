@@ -78,9 +78,10 @@ public class NioVirtualFile extends NioVirtualPath implements VirtualFile {
 		this.validateState();
 		ByteBuffer content = this.content;
 		if(content != null) {
+			content.rewind();
 			return content;
 		} else {
-			return this.content = FPInternal.read(this.getPath());
+			return this.content = FPInternal.read(this.getPath()).asReadOnlyBuffer();
 		}
 	}
 

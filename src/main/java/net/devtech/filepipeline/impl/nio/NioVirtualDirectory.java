@@ -19,6 +19,7 @@ import net.devtech.filepipeline.impl.ClosableVirtualSource;
 import net.devtech.filepipeline.impl.DirectoryVirtualSource;
 import net.devtech.filepipeline.impl.util.FPInternal;
 import net.devtech.filepipeline.impl.util.PathStringIterator;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class NioVirtualDirectory extends NioVirtualPath implements VirtualDirectory {
@@ -39,12 +40,34 @@ public class NioVirtualDirectory extends NioVirtualPath implements VirtualDirect
 		this.validateState();
 		VirtualPath current = this;
 		for(String path : PathStringIterator.iterable(relativePath)) {
-			current = find(current, path);
+			current = find(current, path, CreatePathSettings.FIND);
 			if(current == null) {
 				return null;
 			}
 		}
 		return current;
+	}
+
+	@Override
+	public @NotNull VirtualFile getFile(String relativePath) {
+		this.validateState();
+		VirtualPath current = this;
+		Iterator<String> iterator = PathStringIterator.iterable(relativePath).iterator();
+		while(iterator.hasNext()) {
+			String path = iterator.next();
+			current = find(current, path, iterator.hasNext() ? CreatePathSettings.GET_DIR : CreatePathSettings.GET_FILE);
+		}
+		return (VirtualFile) current;
+	}
+
+	@Override
+	public @NotNull VirtualDirectory getDir(String relativePath) {
+		this.validateState();
+		VirtualPath current = this;
+		for(String path : PathStringIterator.iterable(relativePath)) {
+			current = find(current, path, CreatePathSettings.GET_DIR);
+		}
+		return (VirtualDirectory) current;
 	}
 
 	@Override
@@ -72,7 +95,7 @@ public class NioVirtualDirectory extends NioVirtualPath implements VirtualDirect
 				@Override
 				public NioVirtualPath next() {
 					Path next = this.path.next();
-					NioVirtualPath path = NioVirtualDirectory.this.resolveChild(next.getFileName().toString(), next, false, false);
+					NioVirtualPath path = NioVirtualDirectory.this.resolveChild(next.getFileName().toString(), next, CreatePathSettings.FIND);
 					this.size++;
 					if(!this.path.hasNext()) {
 						NioVirtualDirectory.this.completedSize = this.size;
@@ -96,19 +119,19 @@ public class NioVirtualDirectory extends NioVirtualPath implements VirtualDirect
 			AtomicInteger count = new AtomicInteger();
 			return StreamSupport.stream(FPInternal.map(paths.spliterator(), next -> {
 				count.incrementAndGet();
-				return NioVirtualDirectory.this.resolveChild(next.getFileName().toString(), next, false, false);
+				return NioVirtualDirectory.this.resolveChild(next.getFileName().toString(), next, CreatePathSettings.FIND);
 			}, () -> {
 				this.completedSize = count.incrementAndGet();
 			}), false);
 		} else {
 			return StreamSupport.stream(FPInternal.map(paths.spliterator(), next -> {
-				return NioVirtualDirectory.this.resolveChild(next.getFileName().toString(), next, false, false);
+				return NioVirtualDirectory.this.resolveChild(next.getFileName().toString(), next, CreatePathSettings.FIND);
 			}, () -> {}), false);
 		}
 	}
 
 	public VirtualFile outputFile(String relative) {
-		return (VirtualFile) this.resolveChild(relative, null, true, false);
+		return (VirtualFile) this.resolveChild(relative, null, CreatePathSettings.CREATE);
 	}
 
 	public VirtualDirectory outputDir(String relative) {
@@ -116,19 +139,23 @@ public class NioVirtualDirectory extends NioVirtualPath implements VirtualDirect
 		NioVirtualDirectory dir = this;
 		while(iterator.hasNext()) {
 			String path = iterator.next();
-			dir = (NioVirtualDirectory) dir.resolveChild(path, null, true, true);
+			dir = (NioVirtualDirectory) dir.resolveChild(path, null, CreatePathSettings.CREATE_DIRECTORY);
 		}
 		return dir;
 	}
 
 	@Override
 	public void delete() {
-		this.depthStream().map(NioVirtualPath.class::cast).forEach(NioVirtualPath::delete);
 		try {
+			this.deleteContents();
 			Files.deleteIfExists(this.getPath());
 		} catch(IOException e) {
 			throw FPInternal.rethrow(e);
 		}
+	}
+
+	public void deleteContents() {
+		this.depthStream().map(NioVirtualPath.class::cast).forEach(NioVirtualPath::delete);
 	}
 
 	@Override
@@ -152,23 +179,23 @@ public class NioVirtualDirectory extends NioVirtualPath implements VirtualDirect
 		return "NioVirtualDirectory{" + this.relativePath + "}";
 	}
 
-	private static VirtualPath find(VirtualPath current, String name) {
+	private static VirtualPath find(VirtualPath current, String name, CreatePathSettings settings) {
 		if(current instanceof NioVirtualDirectory d) {
-			return d.resolveChild(name, null, false, false);
+			return d.resolveChild(name, null, settings);
 		} else {
 			throw new IllegalStateException(current.relativePath() + " is a file, not directory, so \"" + name + "\" is invalid!");
 		}
 	}
 
-	protected NioVirtualPath resolveChild(String fileName, @Nullable Path path, boolean create, boolean createDirectory) {
+	protected NioVirtualPath resolveChild(String fileName, @Nullable Path path, CreatePathSettings settings) {
 		NioVirtualPath child;
 		Map<String, NioVirtualPath> children = this.children;
 		if(this.completedSize == children.size()) {
 			child = children.get(fileName);
 		} else if(!this.children.isEmpty()) {
-			child = children.computeIfAbsent(fileName, f -> this.createPath(f, path, create, createDirectory));
+			child = children.computeIfAbsent(fileName, f -> this.createPath(f, path, settings));
 		} else {
-			child = this.createPath(fileName, path, create, createDirectory);
+			child = this.createPath(fileName, path, settings);
 			if(child != null) {
 				synchronized(this) {
 					children = children.isEmpty() ? new ConcurrentHashMap<>() : this.children;
@@ -181,23 +208,39 @@ public class NioVirtualDirectory extends NioVirtualPath implements VirtualDirect
 		return child;
 	}
 
-	private NioVirtualPath createPath(String fileName, @Nullable Path path, boolean create, boolean createDirectory) {
+	public enum CreatePathSettings {
+		FIND(true, false, false),
+		GET_FILE(true, false, false),
+		GET_DIR(true, false, true),
+		CREATE(true, true, false),
+		CREATE_DIRECTORY(true, true, true);
+
+		final boolean forceExists, create, isDirectory;
+
+		CreatePathSettings(boolean forceExists, boolean create, boolean isDirectory) {
+			this.forceExists = forceExists;
+			this.create = create;
+			this.isDirectory = isDirectory;
+		}
+	}
+
+	private NioVirtualPath createPath(String fileName, @Nullable Path path, CreatePathSettings settings) {
 		if(path == null) {
 			path = this.getPath().resolve(fileName);
 		}
-		if(create || Files.exists(path)) {
-			if(createDirectory && !Files.exists(path)) {
+		if(settings.forceExists || Files.exists(path)) {
+			if((settings.isDirectory && settings.create) && !Files.exists(path)) {
 				try {
 					Files.createDirectory(path);
 				} catch(IOException e) {
 					throw FPInternal.rethrow(e);
 				}
 			}
-			if(createDirectory || Files.isDirectory(path)) {
+			if(settings.isDirectory || Files.isDirectory(path)) {
 				return new NioVirtualDirectory(this.source, this, path);
 			} else {
 				NioVirtualFile file = new NioVirtualFile(this.source, this, path);
-				if(create) {
+				if(settings.create) {
 					file.setEmptyContents();
 				}
 				return file;

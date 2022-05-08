@@ -72,4 +72,9 @@ public class ProcessSourceImpl implements VirtualSource, InternalVirtualSource {
 	public ClosableVirtualSource getClosable() {
 		return this.closable;
 	}
+
+	@Override
+	public boolean exists() {
+		return this.root.exists();
+	}
 }

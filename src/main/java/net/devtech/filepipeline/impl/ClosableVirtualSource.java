@@ -9,8 +9,7 @@ import net.devtech.filepipeline.api.source.VirtualSource;
 import net.devtech.filepipeline.impl.util.FPInternal;
 
 public abstract class ClosableVirtualSource implements InternalVirtualSource, AutoCloseable, VirtualSource {
-	static final class ChildRef {
-		ClosableVirtualSource child;}
+	static final class ChildRef { ClosableVirtualSource child;}
 
 	final AtomicBoolean isInvalid = new AtomicBoolean();
 	ClosableVirtualSource next;
@@ -97,4 +96,10 @@ public abstract class ClosableVirtualSource implements InternalVirtualSource, Au
 	public ClosableVirtualSource getClosable() {
 		return this;
 	}
+
+	@Override
+	public boolean exists() {
+		return !this.isInvalid();
+	}
+
 }
