@@ -1,5 +1,5 @@
 name: Publish
-on: [workflow_dispatch] # Manual trigger
+on: [ workflow_dispatch ] # Manual trigger
 
 permissions:
   contents: write
@@ -16,9 +16,9 @@ jobs:
         uses: egor-tensin/setup-mingw@v2
         with:
           platform: x64
-    - uses: gradle/wrapper-validation-action@v1
-    - run: ./gradlew native_X64SharedLibrary --no-daemon
-    - uses: actions/upload-artifact@v2
-      with:
-        name: native-linux-x64
-        path: $GITHUB_WORKSPACE/build/libs/native_/64/native_.so
+      - uses: gradle/wrapper-validation-action@v1
+      - run: ./gradlew native_X64SharedLibrary --no-daemon
+      - uses: actions/upload-artifact@v2
+        with:
+          name: native-linux-x64
+          path: $GITHUB_WORKSPACE/build/libs/native_/64/native_.so
