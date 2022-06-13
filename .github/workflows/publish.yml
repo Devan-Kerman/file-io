@@ -13,6 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: gradle/wrapper-validation-action@v1
+      - run: chmod +x gradlew
       - run: ./gradlew native_X64SharedLibrary --no-daemon
       - uses: actions/upload-artifact@v2
         with:
