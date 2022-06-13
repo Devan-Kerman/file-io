@@ -1,5 +1,6 @@
 package net.devtech.filepipeline.impl.process;
 
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 import net.devtech.filepipeline.api.VirtualDirectory;
@@ -68,7 +69,13 @@ public class ProcessSinkImpl implements VirtualSink {
 		this.validateState();
 		this.sink.deleteContents(path);
 	}
-
+	
+	@Override
+	public void copy(InputStream from, VirtualPath to) {
+		this.validateState();
+		this.sink.copy(from, to);
+	}
+	
 	@Override
 	public void copy(VirtualPath from, VirtualPath to) {
 		this.validateState();

@@ -1,15 +1,21 @@
 package net.devtech.filepipeline.api;
 
 import java.io.BufferedReader;
-import java.io.StringReader;
+import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 
+import net.devtech.filepipeline.impl.util.ByteBufferInputStream;
+
 public interface VirtualFile extends VirtualPath {
 	ByteBuffer getContents();
+	
+	default ByteBufferInputStream newInputStream() {
+		return new ByteBufferInputStream(this.getContents());
+	}
 
 	default BufferedReader newReader(Charset charset) {
-		return new BufferedReader(new StringReader(charset.decode(this.getContents()).toString()));
+		return new BufferedReader(new InputStreamReader(new ByteBufferInputStream(this.getContents()), charset));
 	}
 
 	default String asString(Charset set) {

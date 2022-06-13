@@ -1,6 +1,7 @@
 package net.devtech.filepipeline.impl.nio;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 import net.devtech.filepipeline.api.VirtualDirectory;
@@ -97,7 +98,12 @@ public class NioVirtualDirectorySink implements VirtualSink {
 		}
 		((NioVirtualDirectory) path).deleteContents();
 	}
-
+	
+	@Override
+	public void copy(InputStream from, VirtualPath to) {
+	
+	}
+	
 	@Override
 	public void write(VirtualFile path, ByteBuffer buffer) {
 		this.validateState();

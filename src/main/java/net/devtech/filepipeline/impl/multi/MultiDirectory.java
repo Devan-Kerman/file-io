@@ -2,12 +2,14 @@ package net.devtech.filepipeline.impl.multi;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 import net.devtech.filepipeline.api.VirtualDirectory;
 import net.devtech.filepipeline.api.VirtualFile;
 import net.devtech.filepipeline.api.VirtualPath;
 import net.devtech.filepipeline.api.source.VirtualSource;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class MultiDirectory implements VirtualDirectory {
@@ -34,22 +36,25 @@ public class MultiDirectory implements VirtualDirectory {
 		}
 	}
 
-	public VirtualPath find(String relativePath, boolean directory, boolean file) {
+	public <T extends VirtualPath> T find(String relativePath, BiFunction<VirtualDirectory, String, T> function) {
 		this.validateState();
 		List<VirtualDirectory> dirs = null;
 		for(VirtualDirectory dir : this.directories) {
-			VirtualPath path = dir.find(relativePath);
-			if(path instanceof VirtualFile v && file) {
-				return v;
-			} else if(path instanceof VirtualDirectory d && directory) {
+			T path = function.apply(dir, relativePath);
+			if(path == null) {
+				continue;
+			}
+			if(path instanceof VirtualFile) {
+				return path;
+			} else if(path instanceof VirtualDirectory) {
 				if(dirs == null) {
 					dirs = new ArrayList<>();
 				}
-				dirs.add(d);
+				dirs.add((VirtualDirectory) path);
 			}
 		}
 		if(dirs != null) {
-			return new MultiDirectory(this, this.source, dirs);
+			return (T) new MultiDirectory(this, this.source, dirs);
 		} else {
 			return null;
 		}
@@ -57,17 +62,29 @@ public class MultiDirectory implements VirtualDirectory {
 
 	@Override
 	public VirtualPath find(String relativePath) {
-		return this.find(relativePath, true, true);
+		return this.find(relativePath, VirtualDirectory::find);
+	}
+
+	@Override
+	public @NotNull VirtualFile getFile(String relativePath) {
+		VirtualFile path = this.findFile(relativePath);
+		return path == null ? this.find(relativePath, VirtualDirectory::getFile) : path;
+	}
+
+	@Override
+	public @NotNull VirtualDirectory getDir(String relativePath) {
+		VirtualDirectory path = this.findDirectory(relativePath);
+		return path == null ? this.find(relativePath, VirtualDirectory::getDir) : path;
 	}
 
 	@Override
 	public @Nullable VirtualDirectory findDirectory(String relativePath) {
-		return (VirtualDirectory) this.find(relativePath, true, false);
+		return this.find(relativePath, VirtualDirectory::findDirectory);
 	}
 
 	@Override
 	public @Nullable VirtualFile findFile(String relativePath) {
-		return (VirtualFile) this.find(relativePath, false, true);
+		return this.find(relativePath, VirtualDirectory::findFile);
 	}
 
 	@Override

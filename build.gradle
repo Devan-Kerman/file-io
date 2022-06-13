@@ -1,10 +1,13 @@
 plugins {
     id 'java'
     id 'maven-publish'
+    id 'c'
+    id 'application'
 }
 
+
 group 'net.devtech'
-version '1.0.0'
+version '1.1.0'
 
 repositories {
     mavenCentral()
@@ -12,10 +15,19 @@ repositories {
 
 dependencies {
     implementation 'org.jetbrains:annotations:23.0.0'
+    testImplementation('junit:junit:4.12')
+}
+
+compileJava {
+    options.compilerArgs += ["-h", file("src/native_/c")]
 }
 
 java {
     withSourcesJar()
+}
+
+test {
+    systemProperty "java.library.path", file("${buildDir}/libs/native_/shared/x64").absolutePath
 }
 
 publishing {
@@ -38,3 +50,58 @@ publishing {
         }
     }
 }
+
+model {
+    toolChains {
+        gcc32(Gcc) {
+            path "C:/msys64/mingw32/bin"
+            target "x86"
+        }
+
+        gcc64(Gcc) {
+            path "C:/msys64/mingw64/bin"
+            target "x86_64"
+        }
+
+        gcc(Gcc) {}
+    }
+}
+
+model {
+    platforms {
+        x32 {
+            architecture "x86"
+        }
+        x64 {
+            architecture "x86_64"
+        }
+    }
+
+    components {
+        native_(NativeLibrarySpec) {
+            targetPlatform "x32"
+            targetPlatform "x64"
+            binaries.all {
+                if (targetPlatform.operatingSystem.macOsX) {
+                    cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
+                    cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include/darwin"
+                    cCompiler.args '-mmacosx-version-min=10.4'
+                    linker.args '-mmacosx-version-min=10.4'
+                } else if (targetPlatform.operatingSystem.linux) {
+                    cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
+                    cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include/linux"
+                    cCompiler.args '-D_FILE_OFFSET_BITS=64'
+                } else if (targetPlatform.operatingSystem.windows) {
+                    cCompiler.args "-I${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
+                    cCompiler.args "-I${org.gradle.internal.jvm.Jvm.current().javaHome}/include/win32"
+                    //linker.args "Shlwapi.lib", "Advapi32.lib"
+                } else if (targetPlatform.operatingSystem.freeBSD) {
+                    cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
+                    cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include/freebsd"
+                }
+            }
+        }
+    }
+}
+
+test.dependsOn 'native_X64SharedLibrary', 'native_X32SharedLibrary'

@@ -36,12 +36,12 @@ public interface VirtualSource extends VirtualDirectory, AutoCloseable {
 
 	@Override
 	default Iterable<VirtualPath> walk() {
-		return List.of(this.rootDir());
+		return this.rootDir().walk();
 	}
 
 	@Override
 	default Stream<VirtualPath> stream() {
-		return Stream.of(this.rootDir());
+		return this.rootDir().stream();
 	}
 
 	@Override
@@ -79,7 +79,7 @@ public interface VirtualSource extends VirtualDirectory, AutoCloseable {
 		return this;
 	}
 
-	boolean isInvalid(); // todo make operations using invalid roots throw error
+	boolean isInvalid();
 
 	/**
 	 * Invalidates the current virtual root

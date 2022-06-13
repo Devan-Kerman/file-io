@@ -40,7 +40,7 @@ public abstract class InternalVirtualPath implements VirtualPath {
 					try {
 						callable.call();
 					} catch(Exception e) {
-						throw FPInternal.rethrow(e);
+						e.printStackTrace();
 					}
 				});
 			}

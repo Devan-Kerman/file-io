@@ -41,7 +41,7 @@ public class NioVirtualDirectory extends NioVirtualPath implements VirtualDirect
 		VirtualPath current = this;
 		for(String path : PathStringIterator.iterable(relativePath)) {
 			current = find(current, path, CreatePathSettings.FIND);
-			if(current == null) {
+			if(current == null || !current.exists()) {
 				return null;
 			}
 		}
@@ -154,10 +154,6 @@ public class NioVirtualDirectory extends NioVirtualPath implements VirtualDirect
 		}
 	}
 
-	public void deleteContents() {
-		this.depthStream().map(NioVirtualPath.class::cast).forEach(NioVirtualPath::delete);
-	}
-
 	@Override
 	protected void copyTo0(VirtualPath path) throws IOException {
 		if(path instanceof VirtualDirectory v) {
@@ -172,6 +168,10 @@ public class NioVirtualDirectory extends NioVirtualPath implements VirtualDirect
 		} else {
 			throw new IllegalArgumentException(path + " is not a directory!");
 		}
+	}
+
+	public void deleteContents() {
+		this.depthStream().map(NioVirtualPath.class::cast).forEach(NioVirtualPath::delete);
 	}
 
 	@Override
@@ -205,23 +205,23 @@ public class NioVirtualDirectory extends NioVirtualPath implements VirtualDirect
 			}
 		}
 
-		return child;
-	}
-
-	public enum CreatePathSettings {
-		FIND(true, false, false),
-		GET_FILE(true, false, false),
-		GET_DIR(true, false, true),
-		CREATE(true, true, false),
-		CREATE_DIRECTORY(true, true, true);
-
-		final boolean forceExists, create, isDirectory;
-
-		CreatePathSettings(boolean forceExists, boolean create, boolean isDirectory) {
-			this.forceExists = forceExists;
-			this.create = create;
-			this.isDirectory = isDirectory;
+		if(settings.create && child != null && !child.exists()) {
+			try {
+				if(settings.isDirectory) {
+					Files.createDirectories(child.getPath());
+				} else {
+					Path path1 = child.getPath().toAbsolutePath();
+					Path parent = path1.getParent();
+					if(parent != null) {
+						Files.createDirectories(parent);
+					}
+				}
+			} catch(IOException e) {
+				throw FPInternal.rethrow(e);
+			}
 		}
+
+		return child;
 	}
 
 	private NioVirtualPath createPath(String fileName, @Nullable Path path, CreatePathSettings settings) {
@@ -258,5 +258,21 @@ public class NioVirtualDirectory extends NioVirtualPath implements VirtualDirect
 	@Override
 	protected String invalidState() {
 		return "source " + this.source + " of directory " + this.relativePath + " was invalidated!";
+	}
+
+	public enum CreatePathSettings {
+		FIND(true, false, false),
+		GET_FILE(true, false, false),
+		GET_DIR(true, false, true),
+		CREATE(true, true, false),
+		CREATE_DIRECTORY(true, true, true);
+
+		final boolean forceExists, create, isDirectory;
+
+		CreatePathSettings(boolean forceExists, boolean create, boolean isDirectory) {
+			this.forceExists = forceExists;
+			this.create = create;
+			this.isDirectory = isDirectory;
+		}
 	}
 }

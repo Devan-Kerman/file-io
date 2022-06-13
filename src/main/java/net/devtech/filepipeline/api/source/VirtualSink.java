@@ -1,8 +1,8 @@
 package net.devtech.filepipeline.api.source;
 
-import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
@@ -74,6 +74,8 @@ public interface VirtualSink extends AutoCloseable {
 	void delete(VirtualPath path);
 
 	void deleteContents(VirtualDirectory path);
+	
+	void copy(InputStream from, VirtualPath to);
 
 	void copy(VirtualPath from, VirtualPath to);
 
