@@ -53,17 +53,21 @@ publishing {
 
 model {
     toolChains {
-        gcc32(Gcc) {
-            path "C:/msys64/mingw32/bin"
-            target "x86"
-        }
-
-        gcc64(Gcc) {
-            path "C:/msys64/mingw64/bin"
-            target "x86_64"
-        }
-
         gcc(Gcc) {}
+
+        if(file("/msys64/mingw32/bin").exists()) {
+            gcc32(Gcc) {
+                path "C:/msys64/mingw32/bin"
+                target "x86"
+            }
+        }
+
+        if(file("/msys64/mingw64/bin").exists()) {
+            gcc64(Gcc) {
+                path "C:/msys64/mingw64/bin"
+                target "x86_64"
+            }
+        }
     }
 }
 
