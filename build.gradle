@@ -85,12 +85,11 @@ model {
             targetPlatform "x32"
             targetPlatform "x64"
             binaries.all {
-                println("compiler " + cCompiler.args)
-                println("compiler " + linker.args)
                 cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
                 if (targetPlatform.operatingSystem.macOsX) {
                     cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include/darwin"
                     cCompiler.args '-mmacosx-version-min=10.4'
+                    cCompiler.args '-stdlib=libc++'
                     linker.args '-mmacosx-version-min=10.4'
                 } else if (targetPlatform.operatingSystem.linux) {
                     cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include/linux"
