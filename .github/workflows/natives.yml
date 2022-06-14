@@ -19,7 +19,7 @@ jobs:
       - run: ./gradlew native_SharedLibrary --no-daemon
       - uses: actions/upload-artifact@v2
         with:
-          name: native-linux-x64
+          name: natives-x64
           path: build/libs/native_/shared/libnative_.so
   natives_macos:
     runs-on: macos-latest
@@ -33,5 +33,5 @@ jobs:
       - run: gradle native_SharedLibrary --no-daemon
       - uses: actions/upload-artifact@v2
         with:
-          name: native-macos-x64
+          name: natives-x64
           path: build/libs/native_/shared/libnative_.dylib
