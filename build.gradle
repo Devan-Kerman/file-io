@@ -54,7 +54,6 @@ publishing {
 model {
     toolChains {
         //gcc(Gcc) {}
-
         if(file("/msys64/mingw32/bin").exists()) {
             gcc32(Gcc) {
                 path "C:/msys64/mingw32/bin"
@@ -86,7 +85,8 @@ model {
             targetPlatform "x32"
             targetPlatform "x64"
             binaries.all {
-                cCompiler.args.remove("-lstdc++")
+                println("compiler " + cCompiler.args)
+                println("compiler " + linker.args)
                 cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
                 if (targetPlatform.operatingSystem.macOsX) {
                     cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include/darwin"
