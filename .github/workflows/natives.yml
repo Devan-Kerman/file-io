@@ -20,7 +20,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: native-linux-x64
-          path: build/libs/native_/shared/x64/libnative_.so
+          path: build/libs/native_/shared/libnative_.so
   natives_macos:
     runs-on: macos-latest
     steps:
@@ -34,4 +34,4 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: native-macos-x64
-          path: build/libs/native_/shared/x64/libnative_.dylib
+          path: build/libs/native_/shared/libnative_.dylib
