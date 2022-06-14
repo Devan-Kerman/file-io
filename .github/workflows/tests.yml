@@ -1,0 +1,29 @@
+name: Publish
+on: [ workflow_dispatch ] # Manual trigger
+
+permissions:
+  contents: write
+
+# I use windows and am just using gh actions to compile for linux and macos
+jobs:
+  publish_linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 18
+      - uses: actions/checkout@v3
+      - uses: gradle/wrapper-validation-action@v1
+      - run: chmod +x gradlew
+      - run: ./gradlew test --no-daemon
+  publish_macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 18
+      - uses: actions/checkout@v3
+      - uses: gradle/wrapper-validation-action@v1
+      - run: gradle test --no-daemon

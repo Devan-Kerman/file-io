@@ -26,9 +26,9 @@ java {
     withSourcesJar()
 }
 
-test {
-    systemProperty "java.library.path", file("${buildDir}/libs/native_/shared/x64").absolutePath
-}
+//test {
+//    systemProperty "java.library.path", file("${buildDir}/libs/native_/shared/x64").absolutePath
+//}
 
 publishing {
     publications {
@@ -53,17 +53,17 @@ publishing {
 
 model {
     toolChains {
-        //gcc(Gcc) {}
-        if(file("/msys64/mingw32/bin").exists()) {
-            gcc32(Gcc) {
-                path "C:/msys64/mingw32/bin"
-                target "x86"
-            }
-        }
+
+        //if(file("/msys64/mingw32").exists()) {
+        //    gcc32(Gcc) {
+        //        path "C:/msys64/mingw32"
+        //        target "x86"
+        //    }
+        //}
 
         if(file("/msys64/mingw64/bin").exists()) {
             gcc64(Gcc) {
-                path "C:/msys64/mingw64/bin"
+                path "C:/msys64/mingw64"
                 target "x86_64"
             }
         }
@@ -72,9 +72,9 @@ model {
 
 model {
     platforms {
-        x32 {
-            architecture "x86"
-        }
+        //x86 {
+        //    architecture "x86"
+        //}
         x64 {
             architecture "x86_64"
         }
@@ -82,7 +82,7 @@ model {
 
     components {
         native_(NativeLibrarySpec) {
-            targetPlatform "x32"
+            //targetPlatform "x86"
             targetPlatform "x64"
             binaries.all {
                 cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
@@ -110,4 +110,4 @@ tasks.configureEach() {
     println it.toString() + " " + it.outputs.files.files.toString()
 }
 
-test.dependsOn 'native_X64SharedLibrary', 'native_X32SharedLibrary'
+test.dependsOn 'native_SharedLibrary'//, 'native_X86SharedLibrary'
