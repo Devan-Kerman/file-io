@@ -88,9 +88,9 @@ model {
                 cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
                 if (targetPlatform.operatingSystem.macOsX) {
                     cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include/darwin"
-                    cCompiler.args '-mmacosx-version-min=10.4'
+                    cCompiler.args '-mmacosx-version-min=10.7'
                     cCompiler.args '-stdlib=libc++'
-                    linker.args '-mmacosx-version-min=10.4'
+                    linker.args '-mmacosx-version-min=10.7'
                 } else if (targetPlatform.operatingSystem.linux) {
                     cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include/linux"
                     cCompiler.args '-D_FILE_OFFSET_BITS=64'
