@@ -86,26 +86,27 @@ model {
             targetPlatform "x32"
             targetPlatform "x64"
             binaries.all {
+                cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
                 if (targetPlatform.operatingSystem.macOsX) {
-                    cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
                     cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include/darwin"
                     cCompiler.args '-mmacosx-version-min=10.4'
                     linker.args '-mmacosx-version-min=10.4'
                 } else if (targetPlatform.operatingSystem.linux) {
-                    cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
                     cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include/linux"
                     cCompiler.args '-D_FILE_OFFSET_BITS=64'
                 } else if (targetPlatform.operatingSystem.windows) {
-                    cCompiler.args "-I${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
                     cCompiler.args "-I${org.gradle.internal.jvm.Jvm.current().javaHome}/include/win32"
                     //linker.args "Shlwapi.lib", "Advapi32.lib"
                 } else if (targetPlatform.operatingSystem.freeBSD) {
-                    cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
                     cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include/freebsd"
                 }
             }
         }
     }
+}
+
+tasks.configureEach() {
+    println it.toString() + " " + it.outputs.files.files.toString()
 }
 
 test.dependsOn 'native_X64SharedLibrary', 'native_X32SharedLibrary'
