@@ -29,7 +29,7 @@ jobs:
           java-version: 18
       - uses: actions/checkout@v3
       - uses: gradle/wrapper-validation-action@v1
-      - run: gradlew native_X64SharedLibrary --no-daemon
+      - run: .\gradlew native_X64SharedLibrary --no-daemon
       - uses: actions/upload-artifact@v2
         with:
           name: native-windows-x64
