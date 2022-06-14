@@ -9,10 +9,10 @@ extern "C" {
 #endif
 /*
  * Class:     net_devtech_filepipeline_impl_util_ZipFileSystemInternal
- * Method:    sync0
+ * Method:    sync
  * Signature: (Ljava/nio/file/FileSystem;)V
  */
-JNIEXPORT void JNICALL Java_net_devtech_filepipeline_impl_util_ZipFileSystemInternal_sync0
+JNIEXPORT void JNICALL Java_net_devtech_filepipeline_impl_util_ZipFileSystemInternal_sync
   (JNIEnv *, jclass, jobject);
 
 #ifdef __cplusplus

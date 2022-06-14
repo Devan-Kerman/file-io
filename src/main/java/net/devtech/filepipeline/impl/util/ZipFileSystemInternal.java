@@ -1,6 +1,7 @@
 package net.devtech.filepipeline.impl.util;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -9,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class ZipFileSystemInternal {
 	public static final boolean CAN_USE_NATIVE;
@@ -31,22 +33,21 @@ public class ZipFileSystemInternal {
 		HANDLE = handle;
 		
 		List<Exception> nativeExceptions = new ArrayList<>();
-		boolean nativeSuccess = true;
+		boolean nativ = false;
 		try {
 			Path temp = Files.createTempDirectory("file-pipeline-natives");
-			if(tryLoadLibrary("native_.dll", temp, nativeExceptions)) {
-				if(tryLoadLibrary("native_.so", temp, nativeExceptions)) {
-					if(tryLoadLibrary("native_.dylib", temp, nativeExceptions)) {
-						System.err.println("Unable to load ZipFileSystem#sync reflection bypass native!");
-						nativeSuccess = false;
-					}
-				}
+			String property = System.getProperty("os.name").toLowerCase(Locale.ROOT);
+			if(property.contains("win")) {
+				nativ = tryLoadLibrary("native_.dll", temp, nativeExceptions);
+			} else if(property.contains("linux")) {
+				nativ = tryLoadLibrary("native_.so", temp, nativeExceptions);
+			} else if(property.contains("osx") || property.contains("mac")) {
+				nativ = tryLoadLibrary("native_.dylib", temp, nativeExceptions);
 			}
 		} catch(IOException e) {
-			nativeSuccess = false;
 			nativeExceptions.add(e);
 		}
-		CAN_USE_NATIVE = nativeSuccess;
+		CAN_USE_NATIVE = nativ;
 		
 		if(reflectErr != null && !CAN_USE_NATIVE) {
 			for(Exception exception : nativeExceptions) {
@@ -59,13 +60,15 @@ public class ZipFileSystemInternal {
 	
 	private static boolean tryLoadLibrary(String name, Path temp, List<Exception> exceptions) throws IOException {
 		Path attemptA = temp.resolve(name);
-		Files.copy(ZipFileSystemInternal.class.getResourceAsStream("/" + name), attemptA);
+		try(InputStream stream = ZipFileSystemInternal.class.getResourceAsStream("/" + name)) {
+			Files.copy(stream, attemptA);
+		}
 		try {
 			System.load(attemptA.toAbsolutePath().toString());
-			return false;
+			return true;
 		} catch(Exception e) {
 			exceptions.add(e);
-			return true;
+			return false;
 		}
 	}
 	
@@ -78,12 +81,12 @@ public class ZipFileSystemInternal {
 					throw FPInternal.rethrow(e);
 				}
 			} else if(CAN_USE_NATIVE) {
-				sync0(system);
+				sync(system);
 			} else {
 				throw new IllegalStateException("Unable to sync file system!");
 			}
 		}
 	}
 	
-	private static native void sync0(FileSystem zipFileSystem);
+	private static native void sync(FileSystem zipFileSystem);
 }
