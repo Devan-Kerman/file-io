@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: gradle/wrapper-validation-action@v1
       - run: chmod +x gradlew
-      - run: ./gradlew native_X64SharedLibrary --no-daemon
+      - run: ./gradlew native_SharedLibrary --no-daemon
       - uses: actions/upload-artifact@v2
         with:
           name: native-linux-x64
@@ -30,7 +30,7 @@ jobs:
           java-version: 18
       - uses: actions/checkout@v3
       - uses: gradle/wrapper-validation-action@v1
-      - run: gradle native_X64SharedLibrary --no-daemon
+      - run: gradle native_SharedLibrary --no-daemon
       - uses: actions/upload-artifact@v2
         with:
           name: native-macos-x64
