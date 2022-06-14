@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import net.devtech.filepipeline.impl.util.ZipFileSystemInternal;
+import net.devtech.filepipeline.impl.util.flushzipfs.NativeZipFsFlush;
 import org.junit.Test;
 
 public class Native {
@@ -22,7 +22,7 @@ public class Native {
 			Path path = system.getPath("test" + i + ".txt");
 			Files.write(path, new byte[1024]);
 		}
-		ZipFileSystemInternal.syncZipFileSystem(system);
+		NativeZipFsFlush.flushZipFs(system);
 		System.out.println("Reading file!");
 		int entries = 0;
 		try(ZipInputStream in = new ZipInputStream(new FileInputStream(of.toFile()))) {

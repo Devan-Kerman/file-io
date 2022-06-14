@@ -75,11 +75,16 @@ public interface VirtualSink extends AutoCloseable {
 
 	void deleteContents(VirtualDirectory path);
 	
-	void copy(InputStream from, VirtualPath to);
+	void copy(InputStream from, VirtualFile to);
 
 	void copy(VirtualPath from, VirtualPath to);
 
 	void write(VirtualFile path, ByteBuffer buffer);
+	
+	/**
+	 * Flush the current VirtualSink, this is sometimes needed for zip files
+	 */
+	void flush();
 
 	default void createIfAbsent(VirtualPath path) {
 		if(!path.exists()) {

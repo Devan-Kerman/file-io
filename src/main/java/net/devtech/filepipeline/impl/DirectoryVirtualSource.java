@@ -42,7 +42,11 @@ public class DirectoryVirtualSource implements VirtualSource, InternalVirtualSou
 	public VirtualSink createSink() throws ReadOnlySourceException {
 		return new NioVirtualDirectorySink(this, this.directory);
 	}
-
+	
+	@Override
+	public void flush() {
+	}
+	
 	@Override
 	public void close() throws Exception {
 	}

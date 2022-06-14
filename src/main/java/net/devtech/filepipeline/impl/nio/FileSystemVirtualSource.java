@@ -11,6 +11,9 @@ import net.devtech.filepipeline.api.source.VirtualSink;
 import net.devtech.filepipeline.impl.ClosableVirtualSource;
 import net.devtech.filepipeline.impl.multi.MultiDirectory;
 import net.devtech.filepipeline.impl.util.ReadOnlySourceException;
+import net.devtech.filepipeline.impl.util.flushzipfs.NativeZipFsFlush;
+import net.devtech.filepipeline.impl.util.flushzipfs.ReflectionZipFsFlush;
+import net.devtech.filepipeline.impl.util.flushzipfs.ZipFileSystemFlusher;
 
 public class FileSystemVirtualSource extends ClosableVirtualSource {
 	final boolean closeSystem;
@@ -52,7 +55,15 @@ public class FileSystemVirtualSource extends ClosableVirtualSource {
 			return () -> null;
 		}
 	}
-
+	
+	@Override
+	public void flush() {
+		if(ReflectionZipFsFlush.ZIP_FS.isInstance(this.system)) {
+			ZipFileSystemFlusher.SUPPORTED.flush(this.system);
+		}
+		super.flush();
+	}
+	
 	@Override
 	public boolean isInvalid() {
 		return super.isInvalid() || !this.system.isOpen();

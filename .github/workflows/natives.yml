@@ -1,4 +1,4 @@
-name: Publish
+name: Natives
 on: [ workflow_dispatch ] # Manual trigger
 
 permissions:
@@ -6,7 +6,7 @@ permissions:
 
 # I use windows and am just using gh actions to compile for linux and macos
 jobs:
-  publish_linux:
+  natives_linux:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-java@v3
@@ -21,7 +21,7 @@ jobs:
         with:
           name: native-linux-x64
           path: build/libs/native_/shared/x64/libnative_.so
-  publish_macos:
+  natives_macos:
     runs-on: macos-latest
     steps:
       - uses: actions/setup-java@v3

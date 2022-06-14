@@ -27,7 +27,7 @@ public abstract class InternalVirtualPath implements VirtualPath {
 		}
 	}
 
-	public VirtualSource openAsSource(ClosableVirtualSource source, boolean create) throws Exception {
+	public synchronized VirtualSource openAsSource(ClosableVirtualSource source, boolean create) throws Exception {
 		VirtualSource archive = this.archive != null ? this.archive.get() : null;
 		if(archive == null || archive.isInvalid()) {
 			VirtualSource src = this.createSource(source, create);

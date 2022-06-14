@@ -41,7 +41,13 @@ public class ProcessSourceImpl implements VirtualSource, InternalVirtualSource {
 			throw FPInternal.rethrow(e);
 		}
 	}
-
+	
+	@Override
+	public void flush() {
+		this.validateState();
+		((InternalVirtualSource)this.root).flush();
+	}
+	
 	@Override
 	public VirtualDirectory rootDir() {
 		this.validateState();

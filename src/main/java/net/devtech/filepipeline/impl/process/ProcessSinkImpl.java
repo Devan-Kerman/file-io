@@ -71,7 +71,7 @@ public class ProcessSinkImpl implements VirtualSink {
 	}
 	
 	@Override
-	public void copy(InputStream from, VirtualPath to) {
+	public void copy(InputStream from, VirtualFile to) {
 		this.validateState();
 		this.sink.copy(from, to);
 	}
@@ -86,5 +86,11 @@ public class ProcessSinkImpl implements VirtualSink {
 	public void write(VirtualFile path, ByteBuffer buffer) {
 		this.validateState();
 		this.sink.write(path, buffer);
+	}
+	
+	@Override
+	public void flush() {
+		this.validateState();
+		this.sink.flush();
 	}
 }

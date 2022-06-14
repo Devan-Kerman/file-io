@@ -11,4 +11,6 @@ public interface InternalVirtualSource {
 	// todo get sink to avoid duplication
 
 	VirtualSink createSink() throws ReadOnlySourceException;
+	
+	void flush();
 }
