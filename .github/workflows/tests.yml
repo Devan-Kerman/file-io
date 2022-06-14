@@ -1,4 +1,4 @@
-name: Publish
+name: Run Tests
 on: [ workflow_dispatch ] # Manual trigger
 
 permissions:
@@ -6,7 +6,7 @@ permissions:
 
 # I use windows and am just using gh actions to compile for linux and macos
 jobs:
-  publish_linux:
+  test_linux:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-java@v3
@@ -17,7 +17,7 @@ jobs:
       - uses: gradle/wrapper-validation-action@v1
       - run: chmod +x gradlew
       - run: ./gradlew test --no-daemon
-  publish_macos:
+  test_macos:
     runs-on: macos-latest
     steps:
       - uses: actions/setup-java@v3
