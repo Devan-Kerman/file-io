@@ -86,6 +86,7 @@ model {
             targetPlatform "x32"
             targetPlatform "x64"
             binaries.all {
+                cCompiler.args.remove("-lstdc++")
                 cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include"
                 if (targetPlatform.operatingSystem.macOsX) {
                     cCompiler.args '-I', "${org.gradle.internal.jvm.Jvm.current().javaHome}/include/darwin"

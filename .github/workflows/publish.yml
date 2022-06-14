@@ -4,6 +4,7 @@ on: [ workflow_dispatch ] # Manual trigger
 permissions:
   contents: write
 
+# I use windows and am just using gh actions to compile for linux and macos
 jobs:
   publish_linux:
     runs-on: ubuntu-latest
@@ -20,24 +21,6 @@ jobs:
         with:
           name: native-linux-x64
           path: build/libs/native_/shared/x64/libnative_.so
-  publish_windows:
-    runs-on: windows-latest
-    steps:
-      - uses: actions/setup-java@v3
-        with:
-          distribution: temurin
-          java-version: 18
-      - uses: actions/checkout@v3
-      - uses: gradle/wrapper-validation-action@v1
-      - run: .\gradlew native_X64SharedLibrary --no-daemon
-      - uses: actions/upload-artifact@v2
-        with:
-          name: native-windows-x64
-          path: build/libs/native_/shared/x64/native_.dll
-      - uses: actions/upload-artifact@v2
-        with:
-          name: build-output-win-64
-          path: build/tmp/compileNative_X64SharedLibraryNative_C/output.txt
   publish_macos:
     runs-on: macos-latest
     steps:
