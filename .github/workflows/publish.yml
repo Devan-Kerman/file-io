@@ -5,7 +5,7 @@ permissions:
   contents: write
 
 jobs:
-  publish:
+  publish_linux:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-java@v3
@@ -19,4 +19,32 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: native-linux-x64
-          path: $GITHUB_WORKSPACE/build/libs/native_/x64/native_.so
+          path: $GITHUB_WORKSPACE/build/libs/native_/shared/x64/native_.so
+  publish_windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 18
+      - uses: actions/checkout@v3
+      - uses: gradle/wrapper-validation-action@v1
+      - run: gradlew native_X64SharedLibrary --no-daemon
+      - uses: actions/upload-artifact@v2
+        with:
+          name: native-windows-x64
+          path: $GITHUB_WORKSPACE/build/libs/native_/shared/x64/native_.dll
+  publish_macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 18
+      - uses: actions/checkout@v3
+      - uses: gradle/wrapper-validation-action@v1
+      - run: gradle native_X64SharedLibrary --no-daemon
+      - uses: actions/upload-artifact@v2
+        with:
+          name: native-macos-x64
+          path: $GITHUB_WORKSPACE/build/libs/native_/shared/x64/native_.so
