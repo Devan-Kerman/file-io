@@ -19,7 +19,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: native-linux-x64
-          path: $GITHUB_WORKSPACE/build/libs/native_/shared/x64/native_.so
+          path: build/libs/native_/shared/x64/native_.so
   publish_windows:
     runs-on: windows-latest
     steps:
@@ -33,7 +33,7 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: native-windows-x64
-          path: $GITHUB_WORKSPACE/build/libs/native_/shared/x64/native_.dll
+          path: build/libs/native_/shared/x64/native_.dll
   publish_macos:
     runs-on: macos-latest
     steps:
@@ -47,4 +47,4 @@ jobs:
       - uses: actions/upload-artifact@v2
         with:
           name: native-macos-x64
-          path: $GITHUB_WORKSPACE/build/libs/native_/shared/x64/native_.so
+          path: build/libs/native_/shared/x64/native_.so
